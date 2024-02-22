@@ -9,8 +9,9 @@ from pytorch3d.ops import sample_points_from_meshes
 from pytorch3d.structures import Meshes
 import dataset_location
 import torch
+from utils import *
 
-
+import pdb
 
 
 
@@ -58,7 +59,7 @@ def fit_mesh(mesh_src, mesh_tgt, args):
         print("[%4d/%4d]; ttime: %.0f (%.2f); loss: %.3f" % (step, args.max_iter, total_time,  iter_time, loss_vis))        
     
     mesh_src.offset_verts_(deform_vertices_src)
-
+    render_mesh(mesh_src,mesh_tgt,path='output/')
     print('Done!')
 
 
@@ -83,6 +84,7 @@ def fit_pointcloud(pointclouds_src, pointclouds_tgt, args):
         print("[%4d/%4d]; ttime: %.0f (%.2f); loss: %.3f" % (step, args.max_iter, total_time,  iter_time, loss_vis))
     
     print('Done!')
+    render_points(pointclouds_src, pointclouds_tgt,path='output/')
 
 
 def fit_voxel(voxels_src, voxels_tgt, args):
@@ -91,7 +93,6 @@ def fit_voxel(voxels_src, voxels_tgt, args):
     optimizer = torch.optim.Adam([voxels_src], lr = args.lr)
     for step in range(start_iter, args.max_iter):
         iter_start_time = time.time()
-
         loss = losses.voxel_loss(voxels_src,voxels_tgt)
 
         optimizer.zero_grad()
@@ -100,12 +101,12 @@ def fit_voxel(voxels_src, voxels_tgt, args):
 
         total_time = time.time() - start_time
         iter_time = time.time() - iter_start_time
-
         loss_vis = loss.cpu().item()
 
         print("[%4d/%4d]; ttime: %.0f (%.2f); loss: %.3f" % (step, args.max_iter, total_time,  iter_time, loss_vis))
     
     print('Done!')
+    render_voxel(voxels_src,voxels_tgt,path='output/')
 
 
 def train_model(args):

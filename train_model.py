@@ -14,19 +14,20 @@ def get_args_parser():
     parser = argparse.ArgumentParser("Singleto3D", add_help=False)
     # Model parameters
     parser.add_argument("--arch", default="resnet18", type=str)
-    parser.add_argument("--lr", default=4e-4, type=float)
-    parser.add_argument("--max_iter", default=100000, type=int)
+    parser.add_argument("--lr", default=1e-3, type=float)
+    parser.add_argument("--max_iter", default=10000, type=int)
     parser.add_argument("--batch_size", default=32, type=int)
     parser.add_argument("--num_workers", default=4, type=int)
     parser.add_argument(
         "--type", default="vox", choices=["vox", "point", "mesh"], type=str
     )
-    parser.add_argument("--n_points", default=1000, type=int)
+    parser.add_argument("--n_points", default=5000, type=int)
     parser.add_argument("--w_chamfer", default=1.0, type=float)
     parser.add_argument("--w_smooth", default=0.1, type=float)
-    parser.add_argument("--save_freq", default=2000, type=int)
+    parser.add_argument("--save_freq", default=500, type=int)
     parser.add_argument("--load_checkpoint", action="store_true")
     parser.add_argument('--load_feat', action='store_true') 
+    parser.add_argument('--device', default='cuda') 
     return parser
 
 
@@ -95,13 +96,14 @@ def train_model(args):
     start_time = time.time()
 
     if args.load_checkpoint:
-        checkpoint = torch.load(f"checkpoint_{args.type}.pth")
+        checkpoint = torch.load(f"checkpoint_{args.type}_4000_{args.lr}.pth")
         model.load_state_dict(checkpoint["model_state_dict"])
         optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
         start_iter = checkpoint["step"]
         print(f"Succesfully loaded iter {start_iter}")
 
     print("Starting training !")
+    min_loss = 100
     for step in range(start_iter, args.max_iter):
         iter_start_time = time.time()
 
@@ -127,8 +129,8 @@ def train_model(args):
         iter_time = time.time() - iter_start_time
 
         loss_vis = loss.cpu().item()
-
-        if (step % args.save_freq) == 0 and step > 0:
+        if min_loss > loss_vis or ((step % args.save_freq) == 0 and step > 0):
+            
             print(f"Saving checkpoint at step {step}")
             torch.save(
                 {
@@ -136,8 +138,9 @@ def train_model(args):
                     "model_state_dict": model.state_dict(),
                     "optimizer_state_dict": optimizer.state_dict(),
                 },
-                f"checkpoint_{args.type}.pth",
+                f"checkpoint_{args.type}_{step}_{args.lr}.pth",
             )
+            min_loss = loss_vis
 
         print(
             "[%4d/%4d]; ttime: %.0f (%.2f, %.2f); loss: %.3f"

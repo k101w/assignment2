@@ -1,3 +1,8 @@
+        # try:
+        #     metrics = evaluate(predictions, mesh_gt, thresholds, args)
+        # except:
+        #     print(step)
+        #     continue
 import argparse
 import time
 import torch
@@ -11,11 +16,12 @@ from pytorch3d.ops import knn_points
 import mcubes
 import utils_vox
 import matplotlib.pyplot as plt 
+from utils import *
 
 def get_args_parser():
     parser = argparse.ArgumentParser('Singleto3D', add_help=False)
     parser.add_argument('--arch', default='resnet18', type=str)
-    parser.add_argument('--vis_freq', default=1000, type=int)
+    parser.add_argument('--vis_freq', default=100, type=int)
     parser.add_argument('--batch_size', default=1, type=int)
     parser.add_argument('--num_workers', default=0, type=int)
     parser.add_argument('--type', default='vox', choices=['vox', 'point', 'mesh'], type=str)
@@ -131,12 +137,13 @@ def evaluate_model(args):
     avg_r_score = []
 
     if args.load_checkpoint:
-        checkpoint = torch.load(f'checkpoint_{args.type}.pth')
+        checkpoint = torch.load(f'checkpoint_{args.type}_1000_0.0001.pth')
         model.load_state_dict(checkpoint['model_state_dict'])
         print(f"Succesfully loaded iter {start_iter}")
     
     print("Starting evaluating !")
     max_iter = len(eval_loader)
+    
     for step in range(start_iter, max_iter):
         iter_start_time = time.time()
 
@@ -151,16 +158,23 @@ def evaluate_model(args):
         predictions = model(images_gt, args)
 
         if args.type == "vox":
+            predictions = torch.sigmoid(predictions)
             predictions = predictions.permute(0,1,4,3,2)
-
-        metrics = evaluate(predictions, mesh_gt, thresholds, args)
-
-        # TODO:
-        # if (step % args.vis_freq) == 0:
-        #     # visualization block
-        #     #  rend = 
-        #     plt.imsave(f'vis/{step}_{args.type}.png', rend)
-      
+        try:
+            metrics = evaluate(predictions, mesh_gt, thresholds, args)
+        except:
+            continue
+            # TODO:
+        if (step % args.vis_freq) == 0:
+            # visualization block
+            if args.type == "vox":
+                rend = render_voxel(predictions,mesh_gt,'output3/',step=step,rend_gt=False)
+            #plt.imsave(f'vis/{step}_{args.type}.png', rend)
+            if args.type == "point":
+                rend = render_points(predictions,mesh_gt,'output3/',step=step,rend_gt=False)
+            
+            if args.type == "mesh":
+                rend = render_mesh(predictions,mesh_gt,'output3/',step=step,rend_gt=False)   
 
         total_time = time.time() - start_time
         iter_time = time.time() - iter_start_time
@@ -170,7 +184,6 @@ def evaluate_model(args):
         avg_p_score.append(torch.tensor([metrics["Precision@%f" % t] for t in thresholds]))
         avg_r_score.append(torch.tensor([metrics["Recall@%f" % t] for t in thresholds]))
         avg_f1_score.append(torch.tensor([metrics["F1@%f" % t] for t in thresholds]))
-
         print("[%4d/%4d]; ttime: %.0f (%.2f, %.2f); F1@0.05: %.3f; Avg F1@0.05: %.3f" % (step, max_iter, total_time, read_time, iter_time, f1_05, torch.tensor(avg_f1_score_05).mean()))
     
 
@@ -178,6 +191,7 @@ def evaluate_model(args):
 
     save_plot(thresholds, avg_f1_score,  args)
     print('Done!')
+    
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Singleto3D', parents=[get_args_parser()])
