@@ -18,6 +18,9 @@ import utils_vox
 import matplotlib.pyplot as plt 
 from utils import *
 
+from util_vis import visualize_cam, Normalize
+from gradcam import GradCAM
+
 def get_args_parser():
     parser = argparse.ArgumentParser('Singleto3D', add_help=False)
     parser.add_argument('--arch', default='resnet18', type=str)
@@ -109,7 +112,6 @@ def evaluate(predictions, mesh_gt, thresholds, args):
     return metrics
 
 
-
 def evaluate_model(args):
     r2n2_dataset = R2N2("test", dataset_location.SHAPENET_PATH, dataset_location.R2N2_PATH, dataset_location.SPLITS_PATH, return_voxels=True, return_feats=args.load_feat)
 
@@ -137,7 +139,7 @@ def evaluate_model(args):
     avg_r_score = []
 
     if args.load_checkpoint:
-        checkpoint = torch.load(f'checkpoint_{args.type}_1000_0.0001.pth')
+        checkpoint = torch.load(f'checkpoint_point_500_0.001_1.0_128.pth')
         model.load_state_dict(checkpoint['model_state_dict'])
         print(f"Succesfully loaded iter {start_iter}")
     
@@ -171,7 +173,7 @@ def evaluate_model(args):
                 rend = render_voxel(predictions,mesh_gt,'output3/',step=step,rend_gt=False)
             #plt.imsave(f'vis/{step}_{args.type}.png', rend)
             if args.type == "point":
-                rend = render_points(predictions,mesh_gt,'output3/',step=step,rend_gt=False)
+                rend = render_points(predictions,mesh_gt,'output3_3/',step=step,rend_gt=False)
             
             if args.type == "mesh":
                 rend = render_mesh(predictions,mesh_gt,'output3/',step=step,rend_gt=False)   

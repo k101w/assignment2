@@ -96,7 +96,7 @@ def train_model(args):
     start_time = time.time()
 
     if args.load_checkpoint:
-        checkpoint = torch.load(f"checkpoint_{args.type}_4000_{args.lr}.pth")
+        checkpoint = torch.load(f"checkpoint_{args.type}_500.pth")
         model.load_state_dict(checkpoint["model_state_dict"])
         optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
         start_iter = checkpoint["step"]
@@ -129,7 +129,7 @@ def train_model(args):
         iter_time = time.time() - iter_start_time
 
         loss_vis = loss.cpu().item()
-        if min_loss > loss_vis or ((step % args.save_freq) == 0 and step > 0):
+        if (step % args.save_freq) == 0 and step > 0:
             
             print(f"Saving checkpoint at step {step}")
             torch.save(
@@ -138,9 +138,9 @@ def train_model(args):
                     "model_state_dict": model.state_dict(),
                     "optimizer_state_dict": optimizer.state_dict(),
                 },
-                f"checkpoint_{args.type}_{step}_{args.lr}.pth",
+                f"checkpoint_{args.type}_{step}_{args.lr}_{args.w_chamfer}_{args.batch_size}.pth",
             )
-            min_loss = loss_vis
+            #min_loss = loss_vis
 
         print(
             "[%4d/%4d]; ttime: %.0f (%.2f, %.2f); loss: %.3f"

@@ -57,7 +57,8 @@ def render_points(points_src,points_tgt,path,step=None,rend_gt=True):
 def render_voxel(voxels_src,voxels_tgt,path,step=None,rend_gt=True):
     num_views = 12
     render_size = 512
-    voxels_src = voxels_src.squeeze(0)
+    if voxels_src.shape[0]==voxels_src.shape[1]:
+        voxels_src = voxels_src.squeeze(0)
     src = cubify(voxels_src, 0.01)
     src_verts = src.verts_list()[0]
     src_faces = src.faces_list()[0]

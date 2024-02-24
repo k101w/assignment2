@@ -59,7 +59,7 @@ def fit_mesh(mesh_src, mesh_tgt, args):
         print("[%4d/%4d]; ttime: %.0f (%.2f); loss: %.3f" % (step, args.max_iter, total_time,  iter_time, loss_vis))        
     
     mesh_src.offset_verts_(deform_vertices_src)
-    render_mesh(mesh_src,mesh_tgt,path='output/')
+    render_mesh(mesh_src,mesh_tgt,path='output2/')
     print('Done!')
 
 
@@ -84,7 +84,7 @@ def fit_pointcloud(pointclouds_src, pointclouds_tgt, args):
         print("[%4d/%4d]; ttime: %.0f (%.2f); loss: %.3f" % (step, args.max_iter, total_time,  iter_time, loss_vis))
     
     print('Done!')
-    render_points(pointclouds_src, pointclouds_tgt,path='output/')
+    render_points(pointclouds_src, pointclouds_tgt,path='output2/')
 
 
 def fit_voxel(voxels_src, voxels_tgt, args):
@@ -106,7 +106,7 @@ def fit_voxel(voxels_src, voxels_tgt, args):
         print("[%4d/%4d]; ttime: %.0f (%.2f); loss: %.3f" % (step, args.max_iter, total_time,  iter_time, loss_vis))
     
     print('Done!')
-    render_voxel(voxels_src,voxels_tgt,path='output/')
+    render_voxel(voxels_src,voxels_tgt,path='output2/')
 
 
 def train_model(args):
